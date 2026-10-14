@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Kiosco App</title><meta name="theme-color" content="#06201d">
+<style>
+/* Diseño ESTÁTICO a propósito: sin animaciones infinitas, sin backdrop-filter, sin capas fijas animadas.
+   Así el teléfono no se recalienta con la app abierta todo el día. Solo hay animaciones cortas al tocar. */
+:root{color-scheme:dark;--bg:#06201d;--card:#0d3a35;--tx:#f0fdf4;--mut:#8fd3c7;--pri:#f59e0b;--acc:#fcd34d;--ok:#35e0a1;--bad:#ff5a5f;--bd:#1d5c54;--sh:0 3px 10px #0006;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;color:var(--tx);font:16px/1.4 system-ui,"Segoe UI","Trebuchet MS",sans-serif;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px));background:radial-gradient(900px 500px at 8% -10%,#14b8a655,transparent),radial-gradient(700px 420px at 100% 0,#f59e0b28,transparent),var(--bg)}
+main{max-width:640px;margin:0 auto;padding:14px}
+h1{font-size:24px;margin:6px 0;font-weight:900;color:var(--acc)}
+h2{font-size:14px;margin:20px 0 8px;text-transform:uppercase;letter-spacing:1.1px;color:var(--mut)}
+.mut{color:var(--mut);font-size:14px}.tiny{font-size:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:12px 14px;margin:8px 0;box-shadow:var(--sh)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.big{font-size:26px;font-weight:900}
+button{font:inherit;border:0;border-radius:14px;padding:10px 16px;background:linear-gradient(135deg,#fbbf24,#d97706);color:#fff;font-weight:800;cursor:pointer;transition:transform .1s}
+button:active{transform:scale(.95)}
+button.sec{background:transparent;color:var(--tx);border:2px solid var(--bd)}
+button.bad{background:#d62839}
+button:disabled{opacity:.45}button.sm{padding:7px 12px;font-size:14px}
+button.rd{width:44px;height:44px;padding:0;border-radius:50%;font-size:24px;line-height:1}
+input,select,textarea{font:inherit;width:100%;padding:11px;border-radius:12px;border:2px solid var(--bd);background:#071f1c;color:var(--tx)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--acc)}
+label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+nav{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:620px;margin:0 auto;background:#0a2f2b;border:1px solid #1f7a6e;border-radius:22px;box-shadow:0 4px 14px #000a;display:flex;padding:5px;gap:1px;z-index:5}
+nav button{position:relative;flex:1;background:none;color:var(--mut);border-radius:16px;padding:6px 0;font-size:10.5px;font-weight:700}
+nav button div{font-size:20px}
+nav button.on{background:linear-gradient(135deg,var(--acc),var(--pri));color:#1e2b33}
+.badge{position:absolute;top:1px;right:6px;min-width:17px;height:17px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;line-height:17px;padding:0 4px}
+.tag{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--acc);color:#1e2b33;font-weight:800;white-space:nowrap}.tag.ok{background:var(--ok)}.tag.gr{background:var(--bd);color:var(--mut)}
+.low{color:var(--bad);font-weight:800}.okc{color:var(--ok);font-weight:800}
+.empty{text-align:center;color:var(--mut);padding:22px 8px}
+.hero{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:20px;background:linear-gradient(135deg,#064e3b,#0f766e 62%,#b45309);border:1px solid #ffffff24;margin-bottom:10px}
+.logo{flex:none;width:64px;height:64px;border-radius:50%;box-shadow:0 0 0 3px var(--acc);overflow:hidden;background:#064e3b}.logo img{width:100%;height:100%;object-fit:cover}
+.brand{font-size:20px;font-weight:900;line-height:1.05;font-style:italic;text-shadow:2px 2px 0 #b45309}.tag2{font-size:12px;color:var(--acc);text-transform:uppercase;letter-spacing:2px;font-weight:800;margin-top:3px}.dt{font-size:12px;opacity:.85;margin-top:3px}
+.em{font-size:20px;margin-right:8px}.nm{display:flex;align-items:center;font-weight:700;min-width:0}
+.bar{height:8px;border-radius:99px;background:var(--bd);margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--ok),#94d82d)}.bar i.lo{background:linear-gradient(90deg,var(--bad),#ff8787)}
+.seg{display:flex;gap:6px;margin:8px 0}.seg button{flex:1;background:transparent;color:var(--mut);border:2px solid var(--bd);padding:9px 6px;font-size:14px}.seg button.on{background:linear-gradient(135deg,#fbbf24,#d97706);color:#fff;border-color:transparent}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.chip{padding:8px 11px;font-size:14px;border-radius:99px;background:transparent;color:var(--tx);border:2px solid var(--bd)}.chip.on{background:linear-gradient(135deg,#fbbf24,#d97706);border-color:transparent;color:#fff}.chip:disabled{opacity:.35}
+.item{display:flex;align-items:center;gap:10px}.item .ti{flex:1;min-width:0}
+.item.off{opacity:.45}
+.qty{display:flex;align-items:center;gap:8px}.cnt{min-width:46px;text-align:center;font-size:20px;font-weight:900;background:#071f1c;border:2px solid var(--bd);color:var(--tx);padding:6px 4px}
+.sel{border-color:var(--acc)}
+.ordline{display:flex;justify-content:space-between;gap:10px;margin:6px 0}
+.sum{border-top:1px solid var(--bd);margin-top:8px;padding-top:8px}
+.rate{border-width:2px}.rate.ok{border-color:var(--ok)}.rate.warn{border-color:var(--acc)}
+.row2{display:grid;grid-template-columns:44% 1fr;gap:8px}.row2r{display:grid;grid-template-columns:1fr 72px 38px auto;gap:6px;align-items:center;margin:6px 0}
+.void{opacity:.5}.void b{text-decoration:line-through}
+.pm{margin:6px 0;font-size:14px;gap:8px;align-items:flex-start}
+svg text{font-family:system-ui,sans-serif}
+dialog{border:0;border-radius:20px;padding:16px;width:min(94vw,470px);background:var(--card);color:var(--tx);max-height:90vh;overflow:auto}
+dialog::backdrop{background:#021411cc}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));background:var(--tx);color:#042f2a;padding:11px 18px;border-radius:14px;display:none;z-index:9;max-width:90vw;font-weight:700;box-shadow:var(--sh)}
+#app.in{animation:fade .18s}
+@keyframes fade{from{opacity:0}}
+#splash{position:fixed;inset:0;z-index:99;background:radial-gradient(circle at 50% 45%,#1a3fae,#06201d 70%);display:flex;align-items:center;justify-content:center;transition:opacity .35s}#splash.out{opacity:0;pointer-events:none}
+#splash img{width:min(60vw,260px);border-radius:50%;box-shadow:0 0 40px 8px #f59e0b66}
+.credit{text-align:center;font-size:11px;line-height:1.6;color:var(--mut);opacity:.85;margin:30px 0 6px}.credit b{color:var(--pri)}.spc{position:absolute;bottom:calc(22px + env(safe-area-inset-bottom,0px));margin:0}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.srch{position:relative;margin:8px 0}.srch span{position:absolute;left:13px;top:11px;pointer-events:none}.srch input{padding-left:40px}
+.debt{border-color:var(--bad)}.dsub{margin:10px 0 0;padding:6px 0 6px 10px;border-left:3px solid var(--bd)}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="toast" role="status"></div>
+<dialog id="dlg"></dialog>
+<nav id="nav"></nav>
+<script>
+/* ============ DATOS Y UTILIDADES ============ */
+const KEY='kiosco.v1',VER=1;
+const blank=()=>({v:VER,prods:[],sales:[],purchases:[],closes:[],adjusts:[],seq:0,rates:{usd:0,eur:0},ratesDate:'',rateHist:[],lastPay:{m:'Efectivo',cur:'USD'},lastShare:'',recv:'',lastBackup:'',note:false});
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let _u=0;const uid=()=>Date.now().toString(36)+(_u++).toString(36)+Math.random().toString(36).slice(2,5);
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>ymd(new Date());
+const hhmm=()=>new Date().toTimeString().slice(0,5);
+const n=v=>{const x=parseFloat(String(v).replace(',','.'));return isNaN(x)?0:x};
+const r2=v=>Math.round(v*100)/100,r4=v=>Math.round(v*10000)/10000;
+const nf=(v,d)=>{d=d===undefined?2:d;const k=Math.pow(10,d);return (Math.round(v*k)/k).toLocaleString('es',{minimumFractionDigits:d,maximumFractionDigits:d})};
+const fq=v=>(Math.round(v*100)/100).toLocaleString('es',{maximumFractionDigits:2});
+const money=v=>'$'+nf(v);
+function mon(v,c){return c==='VES'?'Bs '+nf(v):c==='EUR'?'€'+nf(v):money(v)}
+const CN={VES:'Bolívares',USD:'Dólares',EUR:'Euros'};
+const prd=id=>S.prods.find(p=>p.id===id);
+const ni=v=>Math.floor(n(v));
+const toast=m=>{const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',2800)};
+const closeDlg=()=>{const d=$('dlg');if(d.open)d.close()};
+function dlg(html){const d=$('dlg');d.innerHTML=html;if(!d.open)d.showModal()}
+const fdt=iso=>{try{return new Date(iso).toLocaleString('es',{dateStyle:'short',timeStyle:'short'})}catch(e){return String(iso)}};
+/* Métodos de pago: Pago móvil/Débito solo Bs; Efectivo y Otro en cualquier moneda (admiten vuelto). Fiado = el cliente se lleva el producto y paga después. */
+const PAYS=[
+ {k:'Pago Móvil',e:'📱',l:'Pago móvil o Transferencia',s:'Pago móvil',c:'#35e0a1',cur:['VES'],cash:false},
+ {k:'Efectivo',e:'💵',l:'Efectivo',s:'Efectivo',c:'#fcd34d',cur:['USD','EUR','VES'],cash:true},
+ {k:'Débito',e:'💳',l:'Débito',s:'Débito',c:'#3d7bff',cur:['VES'],cash:false},
+ {k:'Otro',e:'🧾',l:'Otro',s:'Otro',c:'#b88cff',cur:['USD','EUR','VES'],cash:true}];
+const FIADO={k:'Fiado',e:'📝',l:'Fiado (paga después)',s:'Fiado',c:'#ff8787',cur:['USD'],cash:false};
+const mkey=m=>m==='Fiado'?'Fiado':PAYS.some(p=>p.k===m)?m:'Otro';
+const PM=k=>k==='Fiado'?FIADO:PAYS.find(p=>p.k===mkey(k));
+const isCash=m=>PM(m).cash;
+
+/* ============ PRODUCTOS DE EJEMPLO (se cargan al instalar) ============ */
+function exampleCatalog(){const P=(name,price,cost,min,stock)=>({id:uid(),name,price,cost,min,stock});
+  return[P('Agua 500 ml',1,.5,12,48),P('Refresco lata',1.5,.9,12,48),P('Jugo en caja',1,.6,10,36),P('Malta',1.2,.7,10,24),P('Papas fritas',1.2,.7,10,30),
+    P('Galletas',.8,.45,10,40),P('Chocolate',1,.6,10,30),P('Chicle',.25,.12,20,100),P('Caramelos',.1,.05,30,200),P('Helado',1,.55,8,20)]}
+function migrate(d){
+  d=d&&typeof d==='object'?d:{};
+  const arr=v=>Array.isArray(v)?v:[];
+  if(d.v>=VER){const o=Object.assign(blank(),d);['prods','sales','purchases','closes','adjusts','rateHist'].forEach(k=>o[k]=arr(o[k]));if(!o.rates)o.rates={usd:0,eur:0};
+    o.sales.forEach(s=>{if(!Array.isArray(s.abonos))s.abonos=[];if(s.client===undefined)s.client=''});return o}
+  const o=blank();o.prods=exampleCatalog();o.note=true;return o}
+let S;
+try{const raw=localStorage.getItem(KEY);S=raw?migrate(JSON.parse(raw)):migrate({})}catch(e){S=migrate({})}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No se pudo guardar en este teléfono')}};
+save();
+
+/* ============ TASA DEL DÍA (una por día, obligatoria para Bs y €) ============ */
+const rt=()=>S.rates||{};
+const rateFresh=()=>S.ratesDate===today();
+function rateOk(c){return c==='USD'||(rateFresh()&&((c==='VES'&&rt().usd>0)||(c==='EUR'&&rt().usd>0&&rt().eur>0)))}
+function toUsd(a,c){if(c==='USD')return a;if(!rateOk(c))return NaN;return c==='VES'?a/rt().usd:a*rt().eur/rt().usd}
+function fromUsd(u,c){if(c==='USD')return u;if(!rateOk(c))return NaN;return c==='VES'?u*rt().usd:u*rt().usd/rt().eur}
+const bsTxt=u=>rateFresh()&&rt().usd>0?'Bs '+nf(u*rt().usd):'';
+function ratesForm(auto){const r=rt(),h=(S.rateHist||[]).slice().reverse().slice(0,7);
+  dlg(`<h2>💱 Tasa de hoy · ${today()}</h2><div class="mut">${auto?'Es un día nuevo: fija la tasa de hoy para cobrar con Bs o €. ':''}${rateFresh()?'Ya fijaste la de hoy; puedes corregirla (las ventas hechas conservan la que usaron). ':''}${r.usd>0&&!rateFresh()?'Te dejé la última tasa; cámbiala por la de hoy. ':''}</div>
+  <label>1 $ = … Bs</label><input id="r_u" inputmode="decimal" value="${r.usd||''}" placeholder="Ej. 40.50">
+  <label>1 € = … Bs (vacío si no cobras en euros)</label><input id="r_e" inputmode="decimal" value="${r.eur||''}" placeholder="Ej. 44.20">
+  ${h.length?`<h2>Últimas tasas</h2><div class="card">${h.map(x=>`<div class="row" style="margin:4px 0"><span class="mut">${esc(x.date)}</span><b>${nf(x.usd)} Bs${x.eur>0?` · € ${nf(x.eur)} Bs`:''}</b></div>`).join('')}</div>`:''}
+  <div class="row" style="margin-top:14px"><button class="sec" onclick="closeDlg()">${auto?'Más tarde':'Cancelar'}</button><button onclick="saveRates()">Fijar tasa de hoy</button></div>`)}
+function saveRates(){const u=n($('r_u').value),e=n($('r_e').value);
+  if(!(u>0))return toast('Escribe la tasa del dólar (Bs por 1 $)');
+  if(e<0)return toast('No se permiten números negativos');
+  S.rates={usd:u,eur:e};S.ratesDate=today();
+  S.rateHist=(S.rateHist||[]).filter(x=>x.date!==today());S.rateHist.push({date:today(),usd:u,eur:e});S.rateHist=S.rateHist.slice(-90);
+  save();closeDlg();render();toast('Tasa de hoy fijada ✓')}
+function rateStrip(){const r=rt(),fresh=rateFresh(),has=r.usd>0;
+  const val=has?`1 $ = <b>${nf(r.usd)} Bs</b>`+(r.eur>0?` · 1 € = <b>${nf(r.eur)} Bs</b>`:''):'';
+  if(has&&fresh)return `<div class="card rate ok"><div class="row"><span><span class="mut">💱 TASA DE HOY ✓</span><br>${val}</span><button class="sec sm" onclick="ratesForm()">Cambiar</button></div></div>`;
+  return `<div class="card rate warn"><div class="row"><span><b>⚠ ${has?'Fija la tasa de hoy':'Aún no hay tasa'}</b><br><span class="mut">${has?`Última (${esc(S.ratesDate||'—')}): ${val}`:'Sin tasa solo puedes cobrar en dólares'}</span></span><button class="sm" onclick="ratesForm()">Fijar tasa</button></div></div>`}
+function promptRate(){if(S.prods.length&&!rateFresh()&&!$('dlg').open)ratesForm(true)}
+
+/* ============ VENTAS Y DEUDAS: acceso a datos ============ */
+const live=()=>S.sales.filter(s=>!s.void);
+const salesOn=d=>live().filter(s=>s.date===d);
+const todaySales=()=>salesOn(today());
+const tot=s=>s.total;
+const lines=s=>s.lines||[];
+const saleCost=s=>s.cost||0;
+const dTot=s=>r4((s.payments||[]).filter(p=>p.m==='Fiado').reduce((a,p)=>a+p.usd,0));
+const dPaid=s=>r4((s.abonos||[]).reduce((a,x)=>a+x.usd,0));
+const owed=s=>s.void?0:Math.max(0,r4(dTot(s)-dPaid(s)));
+const ckey=nm=>String(nm||'').trim().toLowerCase().replace(/\s+/g,' ');
+const hx=k=>[...new TextEncoder().encode(k)].map(b=>b.toString(16).padStart(2,'0')).join('');
+const unhx=h=>new TextDecoder().decode(new Uint8Array((h.match(/../g)||[]).map(x=>parseInt(x,16))));
+function debtors(){const m={};live().forEach(s=>{const o=owed(s);if(o<=0.004)return;const k=ckey(s.client)||'sin nombre';
+  const c=m[k]||(m[k]={key:k,name:String(s.client||'').trim()||'Sin nombre',sales:[],owed:0});c.sales.push(s);c.owed=r4(c.owed+o)});
+  Object.values(m).forEach(c=>c.sales.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)));
+  return Object.values(m).sort((a,b)=>b.owed-a.owed)}
+const totalOwed=()=>r2(debtors().reduce((a,c)=>a+c.owed,0));
+const abonosOn=d=>{const L=[];live().forEach(s=>(s.abonos||[]).forEach(a=>{if(a.date===d)L.push({...a,client:s.client,num:s.num})}));return L.sort((a,b)=>(b.time||'').localeCompare(a.time||''))};
+function salePays(s){
+  let ps=(s.payments||[]).filter(p=>p.m!=='Fiado').map(p=>({...p,m:mkey(p.m),cur:p.cur||'USD',net:p.usd}));
+  let ch=s.change&&s.change.usd>0?s.change.usd:0;
+  for(let i=ps.length-1;i>=0&&ch>1e-9;i--)if(isCash(ps[i].m)){const d=Math.min(ps[i].net,ch);ps[i].net-=d;ch-=d}
+  return ps}
+function payTot(ss){const t={};PAYS.forEach(p=>t[p.k]=0);ss.forEach(s=>salePays(s).forEach(p=>t[p.m]+=p.net));return t}
+function curTot(ss){const t={VES:{rec:0,chg:0},USD:{rec:0,chg:0},EUR:{rec:0,chg:0}};
+  ss.forEach(s=>{salePays(s).forEach(p=>{(t[p.cur]||t.USD).rec+=p.amt});if(s.change&&s.change.amt>0)(t[s.change.cur]||t.USD).chg+=s.change.amt});return t}
+function soldAgg(ss){const m={};ss.forEach(s=>lines(s).forEach(l=>{const k=l.id||l.name,t=m[k]||(m[k]={name:l.name,qty:0,amount:0});t.qty+=l.q;t.amount=r2(t.amount+l.total)}));return Object.values(m).sort((a,b)=>b.qty-a.qty)}
+function pmRows0(ss){const L=[];ss.forEach(s=>salePays(s).forEach(p=>{if(p.m==='Pago Móvil')L.push({date:s.date,time:s.time||'',name:'Orden #'+(s.num||'—'),ref:p.ref||'',amt:p.amt,cur:p.cur,usd:p.usd})}));return L}
+const bsSum=ss=>{const v=ss.reduce((a,s)=>a+tot(s)*((s.rate&&s.rate.usd)||(rateFresh()?rt().usd:0)),0);return v>0?'Bs '+nf(v):''};
+function emo(nm){nm=nm.toLowerCase();const m=[[/agua/,'💧'],[/refresc|soda|cola|gaseosa|malta/,'🥤'],[/jugo/,'🧃'],[/papa|snack|chips|frit/,'🍟'],[/galleta/,'🍪'],[/chocolate/,'🍫'],[/chicle|caramelo|dulce|gomita|chupeta/,'🍬'],[/helado/,'🍦'],[/pan|torta|cachito/,'🥖'],[/cerveza/,'🍺'],[/caf[eé]/,'☕'],[/empanada/,'🥟'],[/queso/,'🧀'],[/leche/,'🥛'],[/huevo/,'🥚']];for(const [r,e] of m)if(r.test(nm))return e;return '🛍️'}
+
+/* ============ ORDEN EN CURSO (varios productos en una venta) ============ */
+let CART=[],VQ='',AQ='',CQ='',OPEN='';
+const cartQty=id=>{const l=CART.find(x=>x.id===id);return l?l.q:0};
+const orderTotal=()=>r2(CART.reduce((a,l)=>{const p=prd(l.id);return a+(p?p.price*l.q:0)},0));
+function setQty(id,q){q=Math.max(0,Math.floor(q)||0);const p=prd(id);if(!p)return;const cap=Math.max(0,Math.floor(p.stock+1e-9));
+  if(q>cap){q=cap;toast('Solo hay stock para '+cap)}
+  const l=CART.find(x=>x.id===id);if(l){if(q>0)l.q=q;else CART=CART.filter(x=>x!==l)}else if(q>0)CART.push({id,q});
+  keep()}
+const addQty=(id,d)=>setQty(id,cartQty(id)+d);
+function qtyDlg(id){const p=prd(id);if(!p)return;const cap=Math.max(0,Math.floor(p.stock+1e-9));
+  dlg(`<h2>${emo(p.name)} ${esc(p.name)}</h2><div class="mut">Disponible: ${cap}</div><label>¿Cuántos?</label><input id="q_v" inputmode="numeric" value="${cartQty(id)||''}" onkeydown="if(event.key==='Enter')qtyOk('${id}')">
+  <div class="chips" style="margin-top:8px">${[1,2,5,10,20,50].map(v=>`<button class="chip" onclick="$('q_v').value=${v}">${v}</button>`).join('')}</div>
+  <div class="row"><button class="sec" onclick="closeDlg()">Cancelar</button><button onclick="qtyOk('${id}')">Listo</button></div>`);
+  setTimeout(()=>{const e=$('q_v');if(e)e.select()},60)}
+function qtyOk(id){const q=n($('q_v').value);closeDlg();setQty(id,q)}
+function clearCart(){CART=[];keep()}
+
+/* ============ COBRO: método, moneda, referencia, pago combinado, vuelto y Fiado ============ */
+let PD=null;
+const allowed=m=>PM(m).cur;
+const firstCur=m=>allowed(m).find(rateOk);
+function payOpen(){
+  if(!CART.length)return;const T=orderTotal();if(!(T>0))return toast('El total de la orden es $0');
+  const lp=S.lastPay||{},m=PAYS.some(p=>p.k===lp.m)&&firstCur(lp.m)?lp.m:'Efectivo';
+  PD={total:T,lines:[{m,cur:allowed(m).includes(lp.cur)&&rateOk(lp.cur)?lp.cur:firstCur(m),amt:'',ref:'',auto:true}],chg:null,client:''};
+  pdBalance();pdDraw()}
+const pdUsd=l=>{const a=n(l.amt);return a>0?toUsd(a,l.cur):0};
+const pdRest=skip=>PD.total-PD.lines.reduce((a,l,i)=>i===skip?a:a+(pdUsd(l)||0),0);
+function pdBalance(){const L=PD.lines.length-1,l=PD.lines[L];if(!l.auto)return;
+  const r=pdRest(L),v=r>0.004?fromUsd(r,l.cur):0;l.amt=v>0?String(r2(v)):'';const e=$('pd_a'+L);if(e)e.value=l.amt}
+function pdSync(){const cc=$('pd_c');if(cc)PD.client=cc.value;PD.lines.forEach((l,i)=>{const a=$('pd_a'+i),r=$('pd_r'+i);if(a)l.amt=a.value;if(r)l.ref=r.value})}
+function pdSet(i,k,v){pdSync();const l=PD.lines[i];
+  if(k==='m'){if(!firstCur(v)){toast('Para cobrar en Bs fija primero la tasa de hoy');return ratesForm()}
+    if(v==='Fiado'&&PD.lines.some((x,j)=>j!==i&&x.m==='Fiado'))return toast('Solo puedes dejar fiada una parte');l.m=v;if(!allowed(v).includes(l.cur)||!rateOk(l.cur))l.cur=firstCur(v)}
+  else if(k==='cur'){if(!rateOk(v)){toast('Primero fija la tasa de hoy');return pdDraw()}l.cur=v}
+  PD.chg=null;pdBalance();pdDraw()}
+function pdIn(i,k,v){const l=PD.lines[i];l[k]=v;if(k==='amt'){l.auto=false;pdBalance()}pdInfo()}
+function pdAdd(){pdSync();PD.lines[PD.lines.length-1].auto=false;const m='Efectivo';PD.lines.push({m,cur:'USD',amt:'',ref:'',auto:true});pdBalance();pdDraw()}
+function pdDel(i){pdSync();PD.lines.splice(i,1);PD.lines[PD.lines.length-1].auto=true;PD.chg=null;pdBalance();pdDraw()}
+function pdCalc(){const T=PD.total;let rec=0,elec=0,bad=false,empty=false;
+  PD.lines.forEach(l=>{const a=n(l.amt);if(!(a>0)){empty=true;return}const u=toUsd(a,l.cur);if(isNaN(u)){bad=true;return}rec+=u;if(!isCash(l.m))elec+=u});
+  const change=Math.max(0,rec-T);let err='';
+  if(bad)err='Fija la tasa de hoy para cobrar en Bs o €';
+  else if(empty)err='Escribe con cuánto paga el cliente';
+  else if(elec>T+0.01)err='Pago móvil, Débito o Fiado no pueden pasar del total (no hay vuelto)';
+  else if(rec<T-0.01)err='Falta '+money(T-rec);
+  return{rec,elec,change,err,ok:!err}}
+function pdChgCur(){if(PD.chg&&rateOk(PD.chg))return PD.chg;const l=PD.lines.find(x=>isCash(x.m));return l&&rateOk(l.cur)?l.cur:'USD'}
+function pdChg(c){if(!rateOk(c))return toast('Primero fija la tasa de hoy');PD.chg=c;pdInfo()}
+function pdInfo(){
+  PD.lines.forEach((l,i)=>{const e=$('pd_e'+i);if(e){const u=pdUsd(l);e.textContent=l.cur!=='USD'&&n(l.amt)>0&&!isNaN(u)?'≈ '+money(u):''}});
+  const c=pdCalc(),el=$('pd_rest');
+  if(el){el.className=c.ok?'okc':'low';el.textContent=c.ok?(c.change>0.01?'✓ Pago completo · hay vuelto':'✓ Pago completo'):c.err}
+  const box=$('pd_chg');
+  if(box){if(c.ok&&c.change>0.01){const cc=pdChgCur();
+    box.innerHTML=`<div class="card" style="border-color:var(--acc)"><div class="mut">💵 Vuelto a entregar</div><div class="chips" style="margin:6px 0">${['USD','EUR','VES'].map(x=>`<button class="chip ${x===cc?'on':''}" ${rateOk(x)?'':'disabled'} onclick="pdChg('${x}')">${x==='USD'?'$':x==='EUR'?'€':'Bs'}</button>`).join('')}</div><div class="big">${mon(r2(fromUsd(c.change,cc)),cc)}</div><div class="mut">${['USD','EUR','VES'].filter(x=>x!==cc&&rateOk(x)).map(x=>'= '+mon(r2(fromUsd(c.change,x)),x)).join(' · ')}</div></div>`}
+    else box.innerHTML=''}
+  const b=$('pd_ok');if(b)b.disabled=!c.ok}
+function pdDraw(){const st=$('dlg').scrollTop;
+  const lns=PD.lines.map((l,i)=>`<div class="card"><div class="chips">${PAYS.concat([FIADO]).map(p=>`<button class="chip ${p.k===l.m?'on':''}" onclick="pdSet(${i},'m','${p.k}')">${p.e} ${p.l}</button>`).join('')}</div>
+    <div class="row2"><select aria-label="Moneda" onchange="pdSet(${i},'cur',this.value)">${allowed(l.m).map(c=>`<option value="${c}" ${l.cur===c?'selected':''} ${rateOk(c)?'':'disabled'}>${c==='USD'?'$ Dólar':c==='EUR'?'€ Euro':'Bs Bolívares'}</option>`).join('')}</select>
+    <input id="pd_a${i}" inputmode="decimal" placeholder="${l.m==='Fiado'?'Queda debiendo ($)':'Cliente paga'}" value="${esc(l.amt)}" oninput="pdIn(${i},'amt',this.value)"></div>
+    <div class="mut" id="pd_e${i}"></div>
+    ${l.m==='Pago Móvil'?`<label>N.º de referencia</label><input id="pd_r${i}" inputmode="numeric" maxlength="24" placeholder="Ej. 004512" value="${esc(l.ref)}" oninput="pdIn(${i},'ref',this.value)">`:''}
+    ${PD.lines.length>1?`<button class="sec sm" style="margin-top:8px" onclick="pdDel(${i})">Quitar este pago</button>`:''}</div>`).join('');
+  dlg(`<h2>Cobrar la venta</h2><div class="card row"><span><b>Total a pagar</b><br><span class="mut">${bsTxt(PD.total)}</span></span><b class="big">${money(PD.total)}</b></div>
+    ${rateFresh()?'':`<div class="mut">💱 Sin tasa de hoy solo puedes cobrar en $. <button class="sec sm" onclick="ratesForm()">Fijar tasa</button></div>`}
+    ${lns}${PD.lines.some(l=>l.m==='Fiado')?clientBox():''}<div id="pd_rest" style="font-weight:800;text-align:center;margin:6px 0"></div><div id="pd_chg"></div>
+    <button class="sec" style="width:100%;margin-bottom:10px" onclick="pdAdd()">➕ Pago combinado (agregar otro pago)</button>
+    <div class="row"><button class="sec" onclick="closeDlg()">Volver</button><button id="pd_ok" onclick="pdOk()">Cobrar</button></div>`);
+  $('dlg').scrollTop=st;pdInfo()}
+function pdOk(){pdSync();const c=pdCalc();if(!c.ok)return toast(c.err||'Revisa los montos');const T=PD.total;
+  const fl=PD.lines.some(l=>l.m==='Fiado'),client=String(PD.client||'').trim().replace(/\s+/g,' ');
+  if(fl&&!client)return toast('Escribe el nombre del cliente que queda debiendo');
+  if(fl&&c.change>0.01)return toast('Con Fiado el pago debe sumar exactamente el total (sin vuelto)');
+  if(PD.lines.some(l=>l.m==='Pago Móvil'&&!String(l.ref||'').trim())&&!confirm('Hay un Pago móvil sin número de referencia. ¿Cobrar de todos modos?'))return;
+  const ps=PD.lines.map(l=>{const amt=r2(n(l.amt));return{m:l.m,cur:l.cur,amt,usd:r4(toUsd(amt,l.cur)),ref:String(l.ref||'').trim()}});
+  const sum=ps.reduce((a,p)=>a+p.usd,0),ch=sum-T;let change=null;
+  if(ch>0.01){const cc=pdChgCur();change={cur:cc,amt:r2(fromUsd(ch,cc)),usd:r4(ch)}}
+  else{const L=ps[ps.length-1];L.usd=r4(L.usd+(T-sum));if(L.m==='Fiado')L.amt=r2(L.usd)}
+  const f1=ps.find(p=>p.m!=='Fiado');if(f1)S.lastPay={m:f1.m,cur:f1.cur};
+  saveSale(ps,change,fl?client:'')}
+function saveSale(ps,change,client){
+  for(const l of CART){const p=prd(l.id);if(!p||p.stock<l.q-1e-9)return toast('El stock cambió: ya no alcanza para esta orden')}
+  const r=rt(),ls=CART.map(l=>{const p=prd(l.id);return{id:p.id,name:p.name,q:l.q,price:p.price,cost:p.cost,total:r2(p.price*l.q)}});
+  const total=orderTotal(),cost=r2(ls.reduce((a,l)=>a+l.cost*l.q,0));
+  CART.forEach(l=>{const p=prd(l.id);p.stock=r4(p.stock-l.q)});
+  S.seq=(S.seq||0)+1;
+  S.sales.push({id:uid(),num:S.seq,date:today(),time:hhmm(),lines:ls,total,amount:total,payments:ps,change,rate:{usd:r.usd||0,eur:r.eur||0},cost,client:client||'',abonos:[]});
+  const num=S.seq;CART=[];save();closeDlg();render();
+  try{navigator.vibrate&&navigator.vibrate(18)}catch(e){}
+  toast(client?'Venta #'+num+' a fiado para '+client+' ✓':'Venta #'+num+' cobrada ✓')}
+function voidSale(id){const s=S.sales.find(x=>x.id===id);if(!s||s.void)return;
+  if((s.abonos||[]).length)return toast('Esta venta ya tiene abonos: no se puede anular');
+  if(!confirm('¿Anular la venta #'+(s.num||'')+' por '+money(tot(s))+'? Se devuelve el stock'+(dTot(s)>0?', la deuda desaparece':'')+' y deja de contar en las ventas.'))return;
+  lines(s).forEach(l=>{const p=prd(l.id);if(p)p.stock=r4(p.stock+l.q)});
+  s.void=true;s.voidAt=new Date().toISOString();save();render();toast('Venta anulada · stock devuelto')}
+const clientBox=()=>{const names=[...new Set(S.sales.map(s=>String(s.client||'').trim()).filter(Boolean))];
+  return `<div class="card" style="border-color:var(--bad)"><label style="margin-top:0">📝 Nombre del cliente que queda debiendo</label><input id="pd_c" list="cl_list" maxlength="40" placeholder="Ej. María Pérez" value="${esc(PD.client||'')}" oninput="PD.client=this.value"><datalist id="cl_list">${names.map(x=>`<option value="${esc(x)}">`).join('')}</datalist><div class="mut tiny" style="margin-top:6px">Lo que no pague ahora queda en <b>Por cobrar</b> con este nombre.</div></div>`};
+
+/* ============ NAVEGACIÓN ============ */
+const TABS=[['inicio','🏠','Inicio'],['almacen','📦','Almacén'],['vender','🛒','Vender'],['ventas','💵','Ventas'],['cobrar','📝','Por cobrar'],['graficos','📊','Gráficos']];
+let tab='inicio';
+function nav(){const p=debtors().length;
+  $('nav').innerHTML=TABS.map(t=>`<button class="${tab===t[0]?'on':''}" onclick="go('${t[0]}')"><div>${t[1]}</div>${t[2]}${t[0]==='cobrar'&&p?`<span class="badge">${p>99?'99+':p}</span>`:''}</button>`).join('')}
+function render(){nav();const v={inicio,almacen,vender,ventas,cobrar,graficos}[tab];$('app').innerHTML=v()+credit()}
+function keep(){const y=window.scrollY;render();window.scrollTo(0,y)}
+function go(t){tab=t;render();window.scrollTo(0,0);const a=$('app');a.classList.remove('in');void a.offsetWidth;a.classList.add('in')}
+const LOGO='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzBmNzY2ZSIvPjxyZWN0IHg9IjEyMCIgeT0iMjMwIiB3aWR0aD0iMjcyIiBoZWlnaHQ9IjE1MCIgcng9IjEwIiBmaWxsPSIjZmVmM2M3Ii8+PHJlY3QgeD0iMTUyIiB5PSIyNjIiIHdpZHRoPSIyMDgiIGhlaWdodD0iNzAiIHJ4PSI4IiBmaWxsPSIjMGIzYjM3Ii8+PHJlY3QgeD0iMTM2IiB5PSIzMzIiIHdpZHRoPSIyNDAiIGhlaWdodD0iMTgiIHJ4PSI2IiBmaWxsPSIjZjU5ZTBiIi8+PHJlY3QgeD0iMTIwIiB5PSIxNjAiIHdpZHRoPSIzNCIgaGVpZ2h0PSI3MCIgZmlsbD0iI2ZmZmZmZiIvPjxjaXJjbGUgY3g9IjEzNyIgY3k9IjIzMCIgcj0iMTciIGZpbGw9IiNmZmZmZmYiLz48cmVjdCB4PSIxNTQiIHk9IjE2MCIgd2lkdGg9IjM0IiBoZWlnaHQ9IjcwIiBmaWxsPSIjZjU5ZTBiIi8+PGNpcmNsZSBjeD0iMTcxIiBjeT0iMjMwIiByPSIxNyIgZmlsbD0iI2Y1OWUwYiIvPjxyZWN0IHg9IjE4OCIgeT0iMTYwIiB3aWR0aD0iMzQiIGhlaWdodD0iNzAiIGZpbGw9IiNmZmZmZmYiLz48Y2lyY2xlIGN4PSIyMDUiIGN5PSIyMzAiIHI9IjE3IiBmaWxsPSIjZmZmZmZmIi8+PHJlY3QgeD0iMjIyIiB5PSIxNjAiIHdpZHRoPSIzNCIgaGVpZ2h0PSI3MCIgZmlsbD0iI2Y1OWUwYiIvPjxjaXJjbGUgY3g9IjIzOSIgY3k9IjIzMCIgcj0iMTciIGZpbGw9IiNmNTllMGIiLz48cmVjdCB4PSIyNTYiIHk9IjE2MCIgd2lkdGg9IjM0IiBoZWlnaHQ9IjcwIiBmaWxsPSIjZmZmZmZmIi8+PGNpcmNsZSBjeD0iMjczIiBjeT0iMjMwIiByPSIxNyIgZmlsbD0iI2ZmZmZmZiIvPjxyZWN0IHg9IjI5MCIgeT0iMTYwIiB3aWR0aD0iMzQiIGhlaWdodD0iNzAiIGZpbGw9IiNmNTllMGIiLz48Y2lyY2xlIGN4PSIzMDciIGN5PSIyMzAiIHI9IjE3IiBmaWxsPSIjZjU5ZTBiIi8+PHJlY3QgeD0iMzI0IiB5PSIxNjAiIHdpZHRoPSIzNCIgaGVpZ2h0PSI3MCIgZmlsbD0iI2ZmZmZmZiIvPjxjaXJjbGUgY3g9IjM0MSIgY3k9IjIzMCIgcj0iMTciIGZpbGw9IiNmZmZmZmYiLz48cmVjdCB4PSIzNTgiIHk9IjE2MCIgd2lkdGg9IjM0IiBoZWlnaHQ9IjcwIiBmaWxsPSIjZjU5ZTBiIi8+PGNpcmNsZSBjeD0iMzc1IiBjeT0iMjMwIiByPSIxNyIgZmlsbD0iI2Y1OWUwYiIvPjxyZWN0IHg9IjEwOCIgeT0iMTQ2IiB3aWR0aD0iMjk2IiBoZWlnaHQ9IjE4IiByeD0iNiIgZmlsbD0iI2I0NTMwOSIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI5NyIgcj0iMTYiIGZpbGw9IiNmY2QzNGQiLz48L3N2Zz4=',BRAND='Kiosco App',DEV='MoussaCorp.',YEAR=2026;
+const credit=()=>`<div class="credit">© ${YEAR} · Desarrollado por <b>${esc(DEV)}</b><br>Se reservan todos los derechos</div>`;
+const hero=()=>`<div class="hero"><div class="logo"><img src="${LOGO}" alt="Logo"></div><div><div class="brand">${esc(BRAND)}</div><div class="tag2">Inventario y ventas</div><div class="dt">Hoy, ${today()}</div></div></div>`;
+function splash(){const d=document.createElement('div');d.id='splash';d.innerHTML=`<img src="${LOGO}" alt="${esc(BRAND)}"><div class="credit spc">Desarrollado por <b>${esc(DEV)}</b> · ${YEAR}</div>`;document.body.appendChild(d);const off=()=>{d.classList.add('out');setTimeout(()=>d.remove(),400)};d.onclick=off;setTimeout(off,1100)}
+function noteBanner(){return S.note?`<div class="card" style="border-color:var(--acc)"><div class="row"><span>🛍️ <b>Productos de ejemplo cargados.</b><br><span class="mut">Edita precios, costos y stock en Almacén antes de vender.</span></span><button class="sec sm" onclick="S.note=false;save();render()">Entendido</button></div></div>`:''}
+function bkBanner(){
+  if(S.recv)return `<div class="card row" style="border-color:var(--acc)"><span>📥 Datos recibidos del encargado<br><span class="mut">${fdt(S.recv)}</span></span><button class="sec sm" onclick="impForm()">Actualizar</button></div>`;
+  if(!S.sales.length)return '';
+  const d=S.lastBackup?(Date.now()-new Date(S.lastBackup+'T00:00:00'))/864e5:99;
+  return d>=7?`<div class="card row" style="border-color:var(--acc)"><span>💾 ${S.lastBackup?'Hace '+Math.floor(d)+' días sin compartir':'Aún no has compartido tus datos'}</span><button class="sm" onclick="shareForm()">Compartir</button></div>`:''}
+
+const searchBox=(v,target,fn,val,ph)=>`<div class="srch"><span>🔍</span><input type="search" autocomplete="off" placeholder="${ph||'Buscar producto…'}" value="${esc(val)}" oninput="${v}=this.value;$('${target}').innerHTML=${fn}()"></div>`;
+
+/* ============ GRÁFICAS (SVG simple, sin librerías, sin animación) ============ */
+function daysBack(k){const a=[];for(let i=k-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);a.push(ymd(d))}return a}
+const dlab=d=>d.slice(8)+'/'+d.slice(5,7);
+function barSvg(vals,labs,col){
+  const W=320,H=140,top=16,bot=18,L=vals.length,bw=W/L,mx=Math.max.apply(null,vals.concat([0.01])),fv=v=>nf(v,v>=100?0:2);let g='';
+  vals.forEach((v,i)=>{const h=v/mx*(H-top-bot),x=i*bw+bw*.14,w=bw*.72,y=H-bot-h;
+    g+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${(v>0?Math.max(h,1):0).toFixed(1)}" rx="3" fill="${col}"/>`;
+    if(L<=10&&v>0)g+=`<text x="${(x+w/2).toFixed(1)}" y="${(y-3).toFixed(1)}" text-anchor="middle" font-size="9" fill="#f0fdf4">${fv(v)}</text>`;
+    if(L<=10||i%Math.ceil(L/8)===0)g+=`<text x="${(x+w/2).toFixed(1)}" y="${H-5}" text-anchor="middle" font-size="9" fill="#8fd3c7">${labs[i]}</text>`});
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Gráfica">${g}<line x1="0" x2="${W}" y1="${H-bot}" y2="${H-bot}" stroke="#1d5c54"/></svg>`}
+function hbars(rows,col){if(!rows.length)return '<div class="empty">Sin datos en este período</div>';const mx=Math.max.apply(null,rows.map(r=>r.v).concat([0.0001]));
+  return rows.map(r=>`<div style="margin:9px 0"><div class="row"><span class="nm">${r.e?`<span class="em">${r.e}</span>`:''}${esc(r.t)}</span><b>${esc(r.x)}</b></div><div class="bar"><i style="width:${Math.max(3,r.v/mx*100)}%;background:${r.c||col}"></i></div></div>`).join('')}
+const byDay=(ss,days,f)=>days.map(d=>r2(ss.filter(s=>s.date===d).reduce((a,s)=>a+f(s),0)));
+
+/* ============ INICIO ============ */
+function inicio(){
+  const ts=todaySales(),rev=ts.reduce((a,s)=>a+tot(s),0),days=daysBack(7),D=debtors(),T=totalOwed(),fi=ts.reduce((a,s)=>a+dTot(s),0);
+  const st=S.prods.slice().sort((a,b)=>a.stock/Math.max(a.min,.0001)-b.stock/Math.max(b.min,.0001));
+  const vals=byDay(live(),days,tot);
+  return `${hero()}${rateStrip()}${noteBanner()}${bkBanner()}
+  <div class="grid"><div class="card"><div class="mut">Vendido hoy</div><div class="big">${money(rev)}</div><div class="mut">${bsSum(ts)||'&nbsp;'}</div></div>
+  <div class="card"><div class="mut">Ventas registradas</div><div class="big">${ts.length}</div><div class="mut">${fi>0?money(fi)+' a fiado':'&nbsp;'}</div></div></div>
+  <div class="card row ${T>0?'debt':''}"><span><span class="mut">📝 Por cobrar</span><br><b class="big">${money(T)}</b><br><span class="mut">${D.length} cliente${D.length===1?'':'s'}${bsTxt(T)?' · '+bsTxt(T):''}</span></span><button class="sm" onclick="go('cobrar')">Ver deudas</button></div>
+  <h2>Stock actual</h2>${st.length?st.slice(0,8).map(stockCard).join('')+(st.length>8?`<button class="sec sm" onclick="go('almacen')">Ver todo el almacén (${st.length})</button>`:''):'<div class="card empty">Aún no hay productos. Créalos en Almacén.</div>'}
+  <h2>Ingresos por día (últimos 7)</h2><div class="card">${barSvg(vals,days.map(dlab),'#fcd34d')}<div class="mut" style="text-align:center">Total: <b>${money(vals.reduce((a,b)=>a+b,0))}</b></div></div>
+  <h2>Ajustes</h2><div class="card">
+  <div class="row"><span>Compartir<br><span class="mut">Último envío: ${S.lastShare?fdt(S.lastShare):'nunca'}</span></span><button class="sm" onclick="shareForm()">Compartir</button></div>
+  <div class="row" style="margin-top:10px"><span>Recibir<br><span class="mut">${S.recv?'Última recepción: '+fdt(S.recv):'Aquí abres lo que te envíen'}</span></span><button class="sec sm" onclick="impForm()">Recibir</button></div>
+  ${prevOk()?`<div class="row" style="margin-top:10px"><span>Deshacer última recepción<br><span class="mut">Vuelve a tus datos anteriores</span></span><button class="sec sm" onclick="undoImp()">Deshacer</button></div>`:''}
+  <div class="row" style="margin-top:10px"><span>Borrar todo</span><button class="bad sm" onclick="wipe()">Borrar datos</button></div></div>`}
+function stockCard(g){const low=g.stock<=g.min,pct=Math.max(0,Math.min(100,g.stock/(Math.max(g.min,.0001)*3)*100));
+  return `<div class="card"><div class="row"><span class="nm"><span class="em">${emo(g.name)}</span>${esc(g.name)}</span><b class="${low?'low':''}">${low?'⚠ ':''}${fq(g.stock)} uds</b></div><div class="bar"><i class="${low?'lo':''}" style="width:${pct}%"></i></div></div>`}
+function wipe(){if(!confirm('¿Borrar TODOS los datos de esta app? No se puede deshacer.'))return;if(!confirm('Última confirmación: se borran ventas, deudas, cierres y productos.'))return;S=blank();save();CART=[];render();toast('Datos borrados')}
+
+/* ============ VENDER ============ */
+function venList(){const q=VQ.trim().toLowerCase(),items=S.prods.filter(p=>!q||p.name.toLowerCase().includes(q));
+  const tile=p=>{const q0=cartQty(p.id),st=Math.floor(p.stock+1e-9),off=st<=0,rem=st-q0;
+    return `<div class="card item ${off?'off':''} ${q0?'sel':''}"><div class="ti"><div class="nm"><span class="em">${emo(p.name)}</span>${esc(p.name)}</div>
+    <div class="mut">${money(p.price)}${bsTxt(p.price)?' · '+bsTxt(p.price):''} · ${off?'<span class="low">Agotado</span>':'quedan '+st}</div></div>
+    <div class="qty"><button class="sec rd" ${q0?'':'disabled'} onclick="addQty('${p.id}',-1)">−</button><button class="cnt" onclick="qtyDlg('${p.id}')" ${off?'disabled':''}>${q0}</button><button class="rd" ${rem<=0?'disabled':''} onclick="addQty('${p.id}',1)">+</button></div></div>`};
+  return items.length?items.map(tile).join(''):`<div class="card empty">${S.prods.length?'Ningún producto se llama así.':'No hay productos. Créalos en Almacén.'}</div>`}
+function vender(){return `<h1>Vender</h1>${rateStrip()}${orderCard()}${searchBox('VQ','ven_l','venList',VQ)}<div id="ven_l">${venList()}</div>`}
+function orderCard(){if(!CART.length)return '';const T=orderTotal();
+  return `<h2>🧾 Orden actual</h2><div class="card">${CART.map(l=>{const p=prd(l.id);return `<div class="ordline"><span>${l.q} × ${esc(p.name)}<br><span class="mut tiny">${money(p.price)} c/u</span></span><b>${money(p.price*l.q)}</b></div>`}).join('')}
+  <div class="sum row"><b>TOTAL</b><span style="text-align:right"><b class="big">${money(T)}</b>${bsTxt(T)?`<br><span class="mut">${bsTxt(T)}</span>`:''}</span></div>
+  <div class="row" style="margin-top:12px"><button class="sec" onclick="clearCart()">Vaciar</button><button onclick="payOpen()">✅ Aceptar y cobrar</button></div></div>`}
+
+/* ============ VENTAS (del día) ============ */
+let VD='';
+function vdMove(k){const d=new Date((VD||today())+'T12:00:00');d.setDate(d.getDate()+k);const s=ymd(d);VD=s>=today()?'':s;keep()}
+function payBreak(ss,title){const t=payTot(ss),all=Object.values(t).reduce((a,b)=>a+b,0);if(!all)return '';
+  return `<h2>${title}</h2><div class="card">${PAYS.filter(p=>t[p.k]>0).map(p=>`<div style="margin:9px 0"><div class="row"><span class="nm"><span class="em">${p.e}</span>${p.l}</span><b>${money(t[p.k])}</b></div><div class="bar"><i style="width:${t[p.k]/all*100}%;background:${p.c}"></i></div></div>`).join('')}</div>`}
+function curBreak(ss){const t=curTot(ss),ks=['VES','USD','EUR'].filter(c=>t[c].rec>0||t[c].chg>0);if(!ks.length)return '';
+  return `<h2>Recibido por moneda</h2><div class="card">${ks.map(c=>`<div style="margin:9px 0"><div class="row"><b>${CN[c]}</b><b>${mon(t[c].rec-t[c].chg,c)}</b></div><div class="mut">Recibido ${mon(t[c].rec,c)}${t[c].chg>0?` · Vuelto −${mon(t[c].chg,c)}`:''}</div></div>`).join('')}<div class="mut tiny">Incluye Pago móvil, Débito y efectivo. Neto = recibido − vuelto.</div></div>`}
+function pmRows(L,title,showDate){if(!L.length)return '';const t=L.reduce((a,x)=>a+x.usd,0);
+  return `<h2>${title}</h2><div class="card"><div class="row"><b>${L.length} ${L.length>1?'pagos':'pago'}</b><b>${money(t)}</b></div>`+
+  L.map(x=>`<div class="row pm"><span>${x.ref?'<b>#'+esc(x.ref)+'</b>':'<span class="low">sin ref.</span>'}<span class="mut"> · ${showDate?esc(x.date.slice(5))+' ':''}${esc(x.time)} · ${esc(x.name)}</span></span><b style="text-align:right">${mon(x.amt,x.cur)}</b></div>`).join('')+`</div>`}
+const pmList=(ss,title,sd)=>pmRows(pmRows0(ss),title,sd);
+function abBreak(L){if(!L.length)return '';const t=L.reduce((a,x)=>a+x.usd,0);
+  return `<h2>Cobrado de deudas</h2><div class="card"><div class="row"><b>${L.length} abono${L.length>1?'s':''}</b><b>${money(t)}</b></div>`+
+  L.map(x=>`<div class="row pm"><span><b>${esc(x.client||'Sin nombre')}</b><span class="mut"> · ${esc(x.time||'')} · ${PM(x.m).e} ${PM(x.m).s}${x.ref?' #'+esc(x.ref):''}</span></span><b style="text-align:right">${mon(x.amt,x.cur)}</b></div>`).join('')+`</div>`}
+function ventas(){
+  const d=VD||today(),all=S.sales.filter(s=>s.date===d).sort((a,b)=>(b.time||'').localeCompare(a.time||'')),lv=all.filter(s=>!s.void),total=lv.reduce((a,s)=>a+tot(s),0);
+  const fi=lv.reduce((a,s)=>a+dTot(s),0),ab=abonosOn(d),abT=ab.reduce((a,x)=>a+x.usd,0);
+  const card=s=>{const ps=salePays(s),f=dTot(s),o=owed(s);return `<div class="card ${s.void?'void':''}"><div class="row"><b>${esc(s.time||'')} · Venta #${s.num||'—'}</b><b>${money(tot(s))}</b></div>
+    <div style="margin:6px 0">${lines(s).map(l=>`<div>${l.q} × ${esc(l.name)} <span class="mut">${money(l.total)}</span></div>`).join('')}</div>
+    <div class="mut">${ps.map(p=>`${PM(p.m).e} ${PM(p.m).s}${p.ref?' #'+esc(p.ref):''} ${mon(p.amt,p.cur)}`).join(' · ')}${s.change&&s.change.amt>0?` · Vuelto ${mon(s.change.amt,s.change.cur)}`:''}${f>0?`${ps.length?' · ':''}📝 Fiado ${money(f)} · <b>${esc(s.client||'Sin nombre')}</b>`:''}</div>
+    <div class="row" style="margin-top:8px"><span>${s.void?'<span class="tag gr">Anulada</span>':f>0?(o>0.004?`<span class="tag" style="background:var(--bad);color:#fff">Debe ${money(o)}</span>`:'<span class="tag ok">Fiado pagado</span>'):'<span class="tag ok">Pagada</span>'}${s.rate&&s.rate.usd?` <span class="mut tiny">${bsTxt2(tot(s),s.rate.usd)}</span>`:''}</span>${s.void?'':`<button class="sec sm" onclick="voidSale('${s.id}')">Anular</button>`}</div></div>`};
+  return `<h1>Ventas</h1><div class="row"><button class="sec sm" onclick="vdMove(-1)">◀</button><b>${d===today()?'Hoy · ':''}${d}</b><button class="sec sm" onclick="vdMove(1)" ${d>=today()?'disabled':''}>▶</button></div>
+  <div class="grid" style="margin-top:8px"><div class="card"><div class="mut">Vendido</div><div class="big">${money(total)}</div><div class="mut">${bsSum(lv)||'&nbsp;'}</div></div><div class="card"><div class="mut">Ventas</div><div class="big">${lv.length}</div></div>
+  <div class="card"><div class="mut">📝 A fiado</div><div class="big">${money(fi)}</div></div><div class="card"><div class="mut">Cobrado de deudas</div><div class="big okc">${money(abT)}</div></div></div>
+  ${payBreak(lv,'Recibido por método')}${curBreak(lv)}${abBreak(ab)}${pmList(lv,'Pagos móviles (con referencia)')}
+  <h2>Detalle de ventas</h2>${all.length?all.map(card).join(''):'<div class="card empty">No hay ventas registradas este día.</div>'}`}
+const bsTxt2=(u,r)=>'Bs '+nf(u*r);
+
+/* ============ POR COBRAR (clientes que quedaron debiendo) ============ */
+function cobList(){const q=CQ.trim().toLowerCase(),L=debtors().filter(c=>!q||c.name.toLowerCase().includes(q));
+  if(!L.length)return `<div class="card empty">${debtors().length?'Ningún cliente se llama así.':'Nadie te debe nada 🎉'}</div>`;
+  return L.map(c=>{const h=hx(c.key),op=OPEN===c.key;
+    const det=op?c.sales.map(s=>{const f=dTot(s),pg=dPaid(s),pagoAl=r2(tot(s)-f);
+      return `<div class="dsub"><div class="row"><b>#${s.num||'—'} · ${esc(s.date)} ${esc(s.time||'')}</b><b class="low">${money(owed(s))}</b></div>
+      <div style="margin:4px 0">${lines(s).map(l=>`<div>${l.q} × ${esc(l.name)} <span class="mut">${money(l.total)}</span></div>`).join('')}</div>
+      <div class="mut tiny">Total ${money(tot(s))}${pagoAl>0.004?' · pagó '+money(pagoAl)+' al comprar':''} · fiado ${money(f)}${pg>0?' · abonado '+money(pg):''}</div>
+      ${(s.abonos||[]).map(a=>`<div class="mut tiny">↳ Abono ${esc(a.date)} ${esc(a.time||'')} · ${PM(a.m).e} ${mon(a.amt,a.cur)}${a.ref?' #'+esc(a.ref):''}</div>`).join('')}
+      <button class="sec sm" style="margin-top:6px" onclick="abonoForm('${h}','${s.id}')">Pagar esta orden</button></div>`}).join(''):'';
+    return `<div class="card debt"><div class="row"><span class="nm">👤 ${esc(c.name)}</span><b class="big low">${money(c.owed)}</b></div>
+    <div class="mut">${c.sales.length} orden${c.sales.length>1?'es':''} · desde ${esc(c.sales[0].date)}${bsTxt(c.owed)?' · '+bsTxt(c.owed):''}</div>
+    <div class="row" style="margin-top:8px;justify-content:flex-start;flex-wrap:wrap"><button class="sm" onclick="abonoForm('${h}','')">💵 Abonar / Pagar</button><button class="sec sm" onclick="toggleOpen('${h}')">${op?'Ocultar':'Ver detalle'}</button><button class="sec sm" onclick="renForm('${h}')">✏️ Nombre</button></div>${det}</div>`}).join('')}
+function cobrar(){const D=debtors(),T=totalOwed();
+  return `<h1>Por cobrar</h1>${rateStrip()}<div class="card debt"><div class="mut">Total que te deben</div><div class="big">${money(T)}</div><div class="mut">${bsTxt(T)||'&nbsp;'} · ${D.length} cliente${D.length===1?'':'s'}</div></div>
+  ${searchBox('CQ','cob_l','cobList',CQ,'Buscar cliente…')}<div id="cob_l">${cobList()}</div>`}
+
+function toggleOpen(h){const k=unhx(h);OPEN=OPEN===k?'':k;keep()}
+function renForm(h){const k=unhx(h),c=debtors().find(x=>x.key===k);if(!c)return;
+  dlg(`<h2>✏️ Nombre del cliente</h2><div class="mut">Cambia el nombre en todas sus órdenes (por ejemplo, para corregir una letra).</div><label>Nombre</label><input id="rn_v" maxlength="40" value="${esc(c.name)}">
+  <div class="row" style="margin-top:14px"><button class="sec" onclick="closeDlg()">Cancelar</button><button onclick="renOk('${h}')">Guardar</button></div>`)}
+function renOk(h){const k=unhx(h),nm=$('rn_v').value.trim().replace(/\s+/g,' ');if(!nm)return toast('Escribe el nombre');
+  S.sales.forEach(s=>{if(ckey(s.client)===k)s.client=nm});if(OPEN===k)OPEN=ckey(nm);save();closeDlg();render();toast('Nombre actualizado ✓')}
+
+/* --- abonos: pagar parte o toda la deuda (se aplica primero a las órdenes más viejas) --- */
+let AB=null;
+function abonoForm(h,sid){const k=unhx(h),c=debtors().find(x=>x.key===k);if(!c)return;
+  const ss=sid?c.sales.filter(s=>s.id===sid):c.sales;if(!ss.length)return;
+  const t=r4(ss.reduce((a,s)=>a+owed(s),0));AB={h,sid:sid||'',name:c.name,owed:t,m:'Efectivo',cur:'USD',amt:String(r2(t))};abDraw()}
+const abOwedCur=()=>r2(fromUsd(AB.owed,AB.cur));
+function abSet(k,v){abRead();
+  if(k==='m'){const cs=PM(v).cur,fc=cs.find(rateOk);if(!fc){toast('Para cobrar en Bs fija primero la tasa de hoy');return ratesForm()}AB.m=v;if(!cs.includes(AB.cur)||!rateOk(AB.cur))AB.cur=fc}
+  else{if(!rateOk(v)){toast('Primero fija la tasa de hoy');return abDraw()}AB.cur=v}
+  AB.amt=String(abOwedCur());abDraw()}
+function abRead(){const e=$('ab_a'),r=$('ab_r');if(e)AB.amt=e.value;if(r)AB.ref=r.value}
+function abInfo(){const e=$('ab_a'),el=$('ab_h');if(!e||!el)return;const a=n(e.value),u=a>0?toUsd(a,AB.cur):0;
+  el.textContent=a>0&&!isNaN(u)?(u>AB.owed+0.01?'Es más de lo que debe':'Equivale a '+money(u)+' · quedaría debiendo '+money(Math.max(0,AB.owed-u))):''}
+function abAll(){AB.amt=String(abOwedCur());const e=$('ab_a');if(e)e.value=AB.amt;abInfo()}
+function abDraw(){
+  dlg(`<h2>💵 Abono de ${esc(AB.name)}</h2><div class="card row"><span><b>Debe${AB.sid?' (esta orden)':''}</b><br><span class="mut">${bsTxt(AB.owed)||'&nbsp;'}</span></span><b class="big low">${money(AB.owed)}</b></div>
+  <div class="chips">${PAYS.map(p=>`<button class="chip ${p.k===AB.m?'on':''}" onclick="abSet('m','${p.k}')">${p.e} ${p.l}</button>`).join('')}</div>
+  <div class="row2"><select aria-label="Moneda" onchange="abSet('cur',this.value)">${PM(AB.m).cur.map(c=>`<option value="${c}" ${AB.cur===c?'selected':''} ${rateOk(c)?'':'disabled'}>${c==='USD'?'$ Dólar':c==='EUR'?'€ Euro':'Bs Bolívares'}</option>`).join('')}</select>
+  <input id="ab_a" inputmode="decimal" placeholder="Cliente paga" value="${esc(AB.amt)}" oninput="AB.amt=this.value;abInfo()"></div>
+  <div class="mut" id="ab_h"></div>
+  ${AB.m==='Pago Móvil'?`<label>N.º de referencia</label><input id="ab_r" inputmode="numeric" maxlength="24" placeholder="Ej. 004512" value="${esc(AB.ref||'')}">`:''}
+  <button class="sec sm" style="margin-top:8px" onclick="abAll()">Pagar todo lo que debe</button>
+  <div class="row" style="margin-top:14px"><button class="sec" onclick="closeDlg()">Cancelar</button><button onclick="abOk()">Registrar abono</button></div>`);abInfo()}
+function abOk(){abRead();const a=r2(n(AB.amt));if(!(a>0))return toast('Escribe cuánto paga');
+  const u=toUsd(a,AB.cur);if(isNaN(u))return toast('Fija la tasa de hoy para cobrar en Bs o €');
+  if(u>AB.owed+0.01)return toast('Eso es más de lo que debe ('+money(AB.owed)+')');
+  const ref=String(AB.ref||'').trim();
+  if(AB.m==='Pago Móvil'&&!ref&&!confirm('Falta el número de referencia del Pago móvil. ¿Registrar de todos modos?'))return;
+  const c=debtors().find(x=>x.key===unhx(AB.h));if(!c)return toast('Esa deuda ya no existe');
+  const ss=(AB.sid?c.sales.filter(s=>s.id===AB.sid):c.sales);
+  let left=Math.min(u,AB.owed),leftAmt=a;const now={date:today(),time:hhmm()};
+  for(const s of ss){if(left<=1e-7)break;const take=Math.min(left,owed(s)),last=left-take<=0.004,amt=last?r2(leftAmt):r2(fromUsd(take,AB.cur));
+    left=r4(left-take);leftAmt=r2(leftAmt-amt);(s.abonos=s.abonos||[]).push({id:uid(),date:now.date,time:now.time,m:AB.m,cur:AB.cur,amt,usd:r4(take),ref})}
+  const nm=AB.name;AB=null;save();closeDlg();render();toast('Abono de '+nm+' registrado ✓')}
+
+/* ============ ALMACÉN (solo productos) ============ */
+const addedToday=id=>S.purchases.filter(p=>p.date===today()&&p.pid===id).reduce((a,p)=>a+p.qty,0)+S.adjusts.filter(a=>a.date===today()&&a.pid===id&&a.delta>0).reduce((a,x)=>a+x.delta,0);
+const soldToday=id=>todaySales().reduce((a,s)=>a+lines(s).filter(l=>l.id===id).reduce((b,l)=>b+l.q,0),0);
+function almList(){const q=AQ.trim().toLowerCase(),L=S.prods.filter(p=>!q||p.name.toLowerCase().includes(q));
+  return L.length?L.map(g=>{const low=g.stock<=g.min,a=addedToday(g.id),u=soldToday(g.id);
+    return `<div class="card"><div class="row"><span class="nm"><span class="em">${emo(g.name)}</span>${esc(g.name)}</span><b class="${low?'low':''}">${low?'⚠ ':''}${fq(g.stock)} uds</b></div>
+    <div class="mut">Precio ${money(g.price)} · Costo ${money(g.cost)} · Ganancia ${money(g.price-g.cost)} · mínimo ${fq(g.min)}${a>0?` · <span class="okc">+${fq(a)} hoy</span>`:''}${u>0?` · −${fq(u)} vendidos hoy`:''}${bsTxt(g.price)?' · '+bsTxt(g.price):''}</div>
+    <div class="row" style="margin-top:8px;justify-content:flex-start"><button class="sm" onclick="buyForm('${g.id}')">🛒 Comprar</button><button class="sec sm" onclick="adjForm('${g.id}')">⚖️ Ajustar</button><button class="sec sm" onclick="prodForm('${g.id}')">✏️ Editar</button></div></div>`}).join(''):`<div class="card empty">${S.prods.length?'Ningún producto se llama así.':'No hay productos. Crea el primero.'}</div>`}
+function almacen(){return `<h1>Almacén</h1>${noteBanner()}<div class="row"><button onclick="prodForm()">➕ Producto</button><button class="sec" onclick="buyForm()">🛒 Comprar</button></div>${searchBox('AQ','alm_l','almList',AQ)}<div id="alm_l">${almList()}</div>`}
+function prodForm(id){const g=id?prd(id):{name:'',price:'',cost:'',min:'',stock:''};
+  dlg(`<h2>${id?'Editar':'Nuevo'} producto</h2><label>Nombre</label><input id="f_n" maxlength="50" value="${esc(g.name)}" placeholder="Ej. Refresco lata">
+  <div class="grid"><div><label>Precio de venta ($)</label><input id="f_p" inputmode="decimal" value="${g.price}"></div><div><label>Costo por unidad ($)</label><input id="f_c" inputmode="decimal" value="${g.cost}"></div></div>
+  <label>Avisar cuando queden (mínimo)</label><input id="f_m" inputmode="numeric" value="${g.min}">
+  ${id?'<div class="mut" style="margin-top:8px">Para cambiar el stock usa Comprar o Ajustar.</div>':'<label>Stock inicial</label><input id="f_s" inputmode="numeric" value="0">'}
+  ${id?`<button class="bad sm" style="margin-top:12px" onclick="delProd('${id}')">Eliminar producto</button>`:''}
+  <div class="row" style="margin-top:14px"><button class="sec" onclick="closeDlg()">Cancelar</button><button onclick="saveProd('${id||''}')">Guardar</button></div>`)}
+function saveProd(id){const nm=$('f_n').value.trim(),pr=n($('f_p').value),c=n($('f_c').value),m=ni($('f_m').value),s=id?0:ni($('f_s').value);
+  if(!nm)return toast('Escribe el nombre');if(!(pr>0))return toast('Escribe el precio de venta');
+  if(c<0||m<0||s<0)return toast('No se permiten números negativos');
+  if(S.prods.some(p=>p.id!==id&&p.name.toLowerCase()===nm.toLowerCase()))return toast('Ya existe un producto con ese nombre');
+  if(id){const g=prd(id);g.name=nm;g.price=pr;g.cost=c;g.min=m}else S.prods.push({id:uid(),name:nm,price:pr,cost:c,min:m,stock:s});
+  save();closeDlg();render();toast('Producto guardado ✓')}
+function delProd(id){if(!confirm('¿Eliminar este producto? Las ventas anteriores no cambian.'))return;S.prods=S.prods.filter(p=>p.id!==id);CART=CART.filter(l=>l.id!==id);save();closeDlg();render()}
+function buyForm(id){if(!S.prods.length)return toast('Primero crea productos');const g=id?prd(id):S.prods[0];
+  dlg(`<h2>🛒 Comprar producto</h2><label>Producto</label><select id="b_i" onchange="buyHint()">${S.prods.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select><div class="mut" id="b_h"></div>
+  <label>Cantidad comprada</label><input id="b_q" inputmode="numeric" placeholder="Ej. 24">
+  <label>Costo total pagado ($, opcional)</label><input id="b_c" inputmode="decimal" placeholder="Ej. 18.50">
+  <div class="mut tiny">Si pones el costo, se actualiza el costo promedio y se registra como gasto.</div>
+  <div class="row" style="margin-top:14px"><button class="sec" onclick="closeDlg()">Cancelar</button><button onclick="buyOk()">Comprar</button></div>`);$('b_i').value=g.id;buyHint()}
+function buyHint(){const g=prd($('b_i').value);if($('b_h')&&g)$('b_h').textContent='Stock actual: '+fq(g.stock)+' uds'}
+function buyOk(){const g=prd($('b_i').value),q=ni($('b_q').value),c=n($('b_c').value);if(!g)return;
+  if(q<=0)return toast('Escribe una cantidad mayor a 0');if(c<0)return toast('El costo no puede ser negativo');
+  if(c>0){const b=Math.max(0,g.stock);g.cost=r4((b*g.cost+c)/(b+q))}
+  g.stock=r4(g.stock+q);S.purchases.push({date:today(),time:hhmm(),pid:g.id,name:g.name,qty:q,cost:c});save();closeDlg();render();toast(`Ahora hay ${fq(g.stock)} de ${g.name}`)}
+function adjForm(id){const g=prd(id);dlg(`<h2>⚖️ Ajustar ${esc(g.name)}</h2><div class="mut">Stock actual: ${fq(g.stock)} uds</div>
+  <label>Tipo</label><select id="a_t"><option value="-1">Restar (merma, regalo, error)</option><option value="1">Sumar (corrección)</option></select>
+  <label>Cantidad</label><input id="a_q" inputmode="numeric"><label>Motivo</label><input id="a_r" placeholder="Ej. se venció, regalo, conteo">
+  <div class="row" style="margin-top:14px"><button class="sec" onclick="closeDlg()">Cancelar</button><button onclick="adjOk('${id}')">Aplicar</button></div>`)}
+function adjOk(id){const g=prd(id),q=ni($('a_q').value);if(q<=0)return toast('Escribe una cantidad mayor a 0');const d=q*n($('a_t').value);
+  if(g.stock+d<0)return toast('No puedes dejar el stock en negativo');
+  g.stock=r4(g.stock+d);S.adjusts.push({date:today(),pid:id,delta:d,reason:$('a_r').value});save();closeDlg();render();toast('Stock ajustado')}
+
+/* ============ GRÁFICOS ============ */
+let GM='g',GR=7;
+function graficos(){
+  return `<h1>Gráficos y cierre</h1><div class="seg"><button class="${GM==='g'?'on':''}" onclick="GM='g';keep()">📊 Gráficos</button><button class="${GM==='c'?'on':''}" onclick="GM='c';keep()">🧾 Cierre del día</button></div>${GM==='g'?charts():cierre()}`}
+function charts(){
+  const days=daysBack(GR),from=days[0],ss=live().filter(s=>s.date>=from),pu=S.purchases.filter(p=>p.date>=from);
+  const ven=byDay(ss,days,tot),gan=byDay(ss,days,s=>tot(s)-saleCost(s)),gas=days.map(d=>r2(pu.filter(p=>p.date===d).reduce((a,p)=>a+(p.cost||0),0)));
+  const sum=a=>a.reduce((x,y)=>x+y,0),V=sum(ven),G=sum(gan),X=sum(gas),labs=days.map(dlab);
+  const top=soldAgg(ss).slice(0,8).map(x=>({e:emo(x.name),t:x.name,v:x.qty,x:`${x.qty} · ${money(x.amount)}`})),
+    mc={},mt={};ss.forEach(s=>salePays(s).forEach(p=>{mc[p.m]=(mc[p.m]||0)+1;mt[p.m]=(mt[p.m]||0)+p.net}));ss.forEach(s=>{const f=dTot(s);if(f>0){mc.Fiado=(mc.Fiado||0)+1;mt.Fiado=(mt.Fiado||0)+f}});
+  const tp=Object.values(mc).reduce((a,b)=>a+b,0),
+    meth=PAYS.concat([FIADO]).filter(p=>mc[p.k]).sort((a,b)=>mc[b.k]-mc[a.k]).map(p=>({e:p.e,t:p.l,v:mc[p.k],c:p.c,x:`${mc[p.k]} pagos (${Math.round(mc[p.k]/tp*100)}%) · ${money(mt[p.k])}`}));
+  return `<div class="chips">${[7,30,90].map(k=>`<button class="chip ${GR===k?'on':''}" onclick="GR=${k};keep()">${k} días</button>`).join('')}</div>
+  <div class="grid"><div class="card"><div class="mut">Ventas</div><div class="big">${money(V)}</div></div><div class="card"><div class="mut">Ganancia</div><div class="big okc">${money(G)}</div></div>
+  <div class="card"><div class="mut">Gastos (compras)</div><div class="big">${money(X)}</div></div><div class="card"><div class="mut">Ventas − gastos</div><div class="big ${V-X<0?'low':''}">${money(V-X)}</div></div></div>
+  <div class="mut tiny">Ganancia = ventas − costo de los productos vendidos (lo fiado cuenta el día que se vende). Gastos = lo que pagaste en compras.</div>
+  <h2>Ventas por día</h2><div class="card">${barSvg(ven,labs,'#fcd34d')}</div>
+  <h2>Ganancia por día</h2><div class="card">${barSvg(gan,labs,'#35e0a1')}</div>
+  <h2>Gastos por día</h2><div class="card">${barSvg(gas,labs,'#f59e0b')}</div>
+  <h2>Productos más vendidos</h2><div class="card">${hbars(top,'linear-gradient(90deg,#fbbf24,#d97706)')}</div>
+  <h2>Métodos de pago más usados</h2><div class="card">${hbars(meth,'#35e0a1')}</div>`}
+
+/* ============ CIERRE DEL DÍA ============ */
+function soldHtml(sold){if(!sold.length)return `<div class="card empty">Aún no hay ventas hoy.</div>`;
+  const tq=sold.reduce((s,x)=>s+x.qty,0);
+  return `<h2>Productos vendidos · ${tq}</h2><div class="card">${sold.map(x=>`<div class="row" style="margin:6px 0"><span class="nm"><span class="em">${emo(x.name)}</span>${esc(x.name)} <span class="tag" style="margin-left:6px">× ${x.qty}</span></span><b>${money(x.amount)}</b></div>`).join('')}</div>`}
+function cierre(){
+  const ts=todaySales(),rev=ts.reduce((a,s)=>a+tot(s),0),done=S.closes.find(c=>c.date===today()),fi=ts.reduce((a,s)=>a+dTot(s),0),ab=abonosOn(today()),abT=ab.reduce((a,x)=>a+x.usd,0);
+  const hist=S.closes.slice().reverse().slice(0,10);
+  return `<div class="mut">Cuenta lo que realmente te queda de cada producto. La app lo compara con lo vendido y te dice qué falta o sobra.</div>
+  ${done?`<div class="card" style="border-color:var(--ok)"><span class="okc">✓ Hoy ya hiciste el cierre.</span> <span class="mut">Si lo repites, reemplaza el anterior.</span></div>`:''}
+  <div class="grid"><div class="card"><div class="mut">Dinero generado</div><div class="big">${money(rev)}</div><div class="mut">${bsSum(ts)||'&nbsp;'}</div></div><div class="card"><div class="mut">Ventas realizadas</div><div class="big">${ts.length}</div></div>
+  <div class="card"><div class="mut">📝 A fiado hoy</div><div class="big">${money(fi)}</div></div><div class="card"><div class="mut">Cobrado de deudas</div><div class="big okc">${money(abT)}</div></div></div>
+  ${soldHtml(soldAgg(ts))}${payBreak(ts,'Recibido por método')}${curBreak(ts)}${abBreak(ab)}${pmList(ts,'Pagos móviles de hoy')}
+  <h2>Conteo físico de productos</h2>
+  ${S.prods.length?S.prods.map(g=>`<div class="card"><div class="row"><b>${esc(g.name)}</b><span class="mut">Sistema: ${fq(g.stock)}</span></div><input data-cnt="${g.id}" inputmode="numeric" placeholder="Quedan (uds)"></div>`).join(''):'<div class="card empty">Primero crea productos.</div>'}
+  ${S.prods.length?`<button style="width:100%;margin-top:8px" onclick="closeDay()">Cerrar el día</button>`:''}
+  <h2>Historial de cierres</h2>${hist.length?hist.map(c=>`<div class="card"><div class="row"><b>${esc(c.date)}</b><b>${money(c.revenue)}</b></div><div class="mut">Ganancia estimada: ${money(c.profit)} · ${c.sales!==undefined?c.sales+' ventas · ':''}Diferencias: ${(c.diffs||[]).length}</div><button class="sec sm" style="margin-top:8px" onclick="closeDetail('${esc(c.date)}')">Ver detalle</button></div>`).join(''):'<div class="empty">Aún no hay cierres.</div>'}`}
+function closeDay(){
+  const ts=todaySales(),revenue=r2(ts.reduce((a,s)=>a+tot(s),0)),cnt={};let sinContar=0;
+  for(const e of document.querySelectorAll('[data-cnt]')){if(e.value.trim()===''){sinContar++;continue}const v=n(e.value);if(v<0)return toast('No se permiten conteos negativos');cnt[e.dataset.cnt]=Math.floor(v)}
+  if(sinContar&&!confirm(`Dejaste ${sinContar} producto${sinContar>1?'s':''} sin contar: se asume que coinciden con el sistema. ¿Continuar?`))return;
+  if(S.closes.some(c=>c.date===today())&&!confirm('Ya cerraste hoy. ¿Reemplazar el cierre de hoy?'))return;
+  const cost=ts.reduce((a,s)=>a+saleCost(s),0),diffs=[];let loss=0;
+  for(const id in cnt){const g=prd(id);if(!g)continue;const d=r4(cnt[id]-g.stock);if(Math.abs(d)>1e-9){diffs.push({id,name:g.name,unit:'uds',expected:g.stock,counted:cnt[id],diff:d});if(d<0)loss+=-d*g.cost}g.stock=cnt[id]}
+  const ab=abonosOn(today()),rec={date:today(),revenue,profit:r2(revenue-cost),sales:ts.length,diffs,loss:r2(loss),pays:payTot(ts),curs:curTot(ts),sold:soldAgg(ts),pm:pmRows0(ts),fiado:r2(ts.reduce((a,s)=>a+dTot(s),0)),abon:r2(ab.reduce((a,x)=>a+x.usd,0))};
+  S.closes=S.closes.filter(c=>c.date!==today());S.closes.push(rec);save();
+  dlg(`<h2>Día cerrado ✓</h2><div class="grid"><div class="card"><div class="mut">Dinero generado</div><div class="big">${money(revenue)}</div></div><div class="card"><div class="mut">Ventas realizadas</div><div class="big">${ts.length}</div></div></div>
+  <div class="mut">Ganancia estimada: ${money(rec.profit)}${rec.fiado>0?' · A fiado: '+money(rec.fiado):''}</div>${diffHtml(rec)}
+  <button style="width:100%;margin-top:12px" onclick="closeDlg();render()">Listo</button>`)}
+function diffHtml(c){const d=c.diffs||[],fal=d.filter(x=>x.diff<0),sob=d.filter(x=>x.diff>0);
+  if(!d.length)return `<h2>Conteo vs. ventas</h2><div class="card okc">✓ El stock concuerda con lo vendido. Todo cuadra.</div>`;
+  return `<h2>Conteo vs. ventas</h2><div class="card" style="border-color:var(--bad)"><b class="low">⚠ El stock NO concuerda con lo vendido</b>
+  ${fal.length?`<div style="margin-top:8px"><b>Faltantes:</b>${fal.map(x=>`<div class="row" style="margin:4px 0"><span>${esc(x.name)}<br><span class="mut tiny">sistema ${fq(x.expected)} · contaste ${fq(x.counted)}</span></span><b class="low">−${fq(-x.diff)}</b></div>`).join('')}</div>`:''}
+  ${sob.length?`<div style="margin-top:8px"><b>Sobrantes:</b>${sob.map(x=>`<div class="row" style="margin:4px 0"><span>${esc(x.name)}<br><span class="mut tiny">sistema ${fq(x.expected)} · contaste ${fq(x.counted)}</span></span><b class="okc">+${fq(x.diff)}</b></div>`).join('')}</div>`:''}
+  ${c.loss>0?`<div class="mut" style="margin-top:8px">Pérdida estimada por faltantes: <b>${money(c.loss)}</b></div>`:''}
+  <div class="mut tiny" style="margin-top:6px">Puede ser merma, regalos, productos vencidos o ventas sin registrar.</div></div>`}
+function closeDetail(d){const c=S.closes.find(x=>x.date===d);if(!c)return;
+  const t=c.pays||{},all=PAYS.reduce((a,p)=>a+(t[p.k]||0),0),
+    pays=all?`<h2>Recibido por método</h2><div class="card">${PAYS.filter(p=>t[p.k]>0).map(p=>`<div class="row" style="margin:6px 0"><span class="nm"><span class="em">${p.e}</span>${p.l}</span><b>${money(t[p.k])}</b></div>`).join('')}</div>`:'';
+  dlg(`<h2>Cierre ${esc(c.date)}</h2><div class="card"><div class="row"><span>Dinero generado</span><b class="big">${money(c.revenue)}</b></div><div class="mut">Ganancia estimada: ${money(c.profit)}${c.sales!==undefined?' · '+c.sales+' ventas':''}${c.fiado>0?' · A fiado '+money(c.fiado):''}${c.abon>0?' · Cobrado de deudas '+money(c.abon):''}</div></div>
+  ${soldHtml(c.sold||[])}${pays}${pmRows(c.pm||[],'Pagos móviles',false)}${diffHtml(c)}
+  <button class="sec" style="width:100%;margin-top:12px" onclick="closeDlg()">Cerrar</button>`)}
+
+/* ============ COMPARTIR / RECIBIR (mensaje con código comprimido y verificado) ============ */
+const prevOk=()=>{try{return !!localStorage.getItem(KEY+'.prev')}catch(e){return false}};
+const CRC_T=(()=>{const t=[];for(let i=0;i<256;i++){let c=i;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[i]=c>>>0}return t})();
+function crc32(s){let c=0xFFFFFFFF;for(let i=0;i<s.length;i++)c=CRC_T[(c^s.charCodeAt(i))&255]^(c>>>8);return((c^0xFFFFFFFF)>>>0).toString(16).padStart(8,'0')}
+function b64e(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s)}
+function b64d(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+async function gz(str){const bytes=new TextEncoder().encode(str);if(typeof CompressionStream==='undefined')return null;
+  return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer())}
+async function gunz(u8){if(typeof DecompressionStream==='undefined')throw new Error('Este teléfono no puede abrir el formato comprimido. Actualiza "Android System WebView" en Play Store.');
+  return await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
+function pkSumOf(d){const t=today(),ls=(d.sales||[]).filter(s=>!s.void),ts=ls.filter(s=>s.date===t),cl=new Set();let ow=0;
+  ls.forEach(s=>{const o=Math.max(0,r4(dTot(s)-dPaid(s)));if(o>0.004){ow+=o;cl.add(ckey(s.client))}});
+  return{at:new Date().toISOString(),day:t,prods:(d.prods||[]).length,sales:(d.sales||[]).length,todayRev:r2(ts.reduce((a,s)=>a+tot(s),0)),todayN:ts.length,low:(d.prods||[]).filter(p=>p.stock<=p.min).length,owed:r2(ow),clients:cl.size}}
+async function pkBuild(){
+  const sum=pkSumOf(S),json=JSON.stringify({v:1,app:'kiosco-app',sum,data:S});
+  let mode='RAW',bytes=null;try{bytes=await gz(json);if(bytes)mode='GZ'}catch(e){bytes=null}
+  if(!bytes)bytes=new TextEncoder().encode(json);
+  const b=b64e(bytes),code=`KIOSCO1|${mode}|${b}|${crc32(b)}|FIN`;
+  const head=`🏪 KIOSCO APP\nReporte del encargado · ${fdt(sum.at)}\n💰 Vendido hoy: ${money(sum.todayRev)} (${sum.todayN} ventas)${sum.low?` · ⚠ Stock bajo: ${sum.low}`:''}\n📝 Por cobrar: ${money(sum.owed)} (${sum.clients} cliente${sum.clients===1?'':'s'})\n\n📲 Para verlo: abre la app → Inicio → Ajustes → Recibir, y pega TODO este mensaje.\n⬇ No borres ni cambies el código ⬇\n`;
+  return{sum,code,text:head+code,len:(head+code).length}}
+async function pkParse(txt){
+  txt=String(txt||'').trim();if(!txt)throw new Error('Pega primero el mensaje del encargado.');
+  let obj;
+  if(txt[0]==='{'){let o;try{o=JSON.parse(txt)}catch(e){throw new Error('El texto está incompleto o dañado.')}obj={sum:null,data:o}}
+  else{
+    const flat=txt.replace(/\s+/g,''),m=flat.match(/KIOSCO1\|(GZ|RAW)\|([A-Za-z0-9+\/=]+)\|([0-9a-f]{8})\|FIN/);
+    if(!m)throw new Error(flat.includes('KIOSCO1|')?'El mensaje está incompleto: falta el final. Pídele al encargado que lo envíe otra vez, o usa el archivo.':'No encontré datos de la app en ese texto.');
+    if(crc32(m[2])!==m[3])throw new Error('El mensaje llegó dañado (se cortó o cambió). Pídelo de nuevo o usa el archivo.');
+    let json;try{const bytes=b64d(m[2]);json=m[1]==='GZ'?await gunz(bytes):new TextDecoder().decode(bytes)}catch(e){throw new Error(e.message&&/WebView/.test(e.message)?e.message:'No pude abrir el paquete.')}
+    try{obj=JSON.parse(json)}catch(e){throw new Error('El paquete está dañado.')}
+  }
+  const d=obj&&obj.data;
+  if(!d||typeof d!=='object'||!Array.isArray(d.sales)||!Array.isArray(d.prods)||!(d.v>=VER))throw new Error('Eso no parece un paquete de Kiosco App.');
+  ['purchases','closes','adjusts'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[]});
+  const sum=obj.sum||Object.assign(pkSumOf(d),{at:'',day:''});
+  return{sum,data:d}}
+let PKG=null,PK=null;
+const shareMark=()=>{S.lastShare=new Date().toISOString();S.lastBackup=today();save()};
+function copyText(t){return new Promise(res=>{const fb=()=>{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0;left:-9999px';document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}a.remove();res(ok)};
+  try{navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(()=>res(true),fb):fb()}catch(e){fb()}})}
+async function shareForm(){
+  dlg(`<h2>Compartir</h2><div class="mut">Preparando el paquete…</div>`);
+  try{PKG=await pkBuild()}catch(e){return dlg(`<h2>Compartir</h2><div class="low">No se pudo preparar el paquete.</div><button class="sec" style="width:100%;margin-top:12px" onclick="closeDlg()">Cerrar</button>`)}
+  const s=PKG.sum,kb=Math.max(1,Math.round(PKG.len/1024));
+  dlg(`<h2>Compartir</h2>
+  <div class="card"><div class="mut">Paquete listo · ${fdt(s.at)}</div>
+  <div class="row" style="margin-top:6px"><span>💰 Vendido hoy</span><b>${money(s.todayRev)}</b></div>
+  <div class="row"><span>📦 Productos · 🧾 Ventas</span><b>${s.prods} · ${s.sales}</b></div>
+  <div class="row"><span>⚠ Productos con stock bajo</span><b>${s.low}</b></div><div class="row"><span>📝 Por cobrar</span><b>${money(s.owed||0)}</b></div>
+  <div class="mut" style="margin-top:6px">Tamaño: ${kb} KB${PKG.len>60000?' · ⚠ Largo para un mensaje de chat: mejor usa "Archivo"':''}</div></div>
+  <button style="width:100%" onclick="shareGo()">📤 Compartir (WhatsApp, correo…)</button>
+  <div class="row" style="margin-top:10px"><button class="sec" onclick="shareCopy()">📋 Copiar mensaje</button><button class="sec" onclick="shareFile()">📎 Archivo</button></div>
+  <div id="pk_box"></div>
+  <div class="mut" style="margin-top:10px">Quien recibe abre la app → Inicio → Ajustes → <b>Recibir</b> y pega el mensaje completo (o elige el archivo). Su teléfono quedará igual que el tuyo.</div>
+  <button class="sec" style="width:100%;margin-top:10px" onclick="closeDlg()">Cerrar</button>`)}
+async function shareGo(){if(!PKG)return;
+  try{if(navigator.share){await navigator.share({title:'Kiosco App · Reporte',text:PKG.text});shareMark();return toast('Compartido ✓')}}catch(e){if(e&&e.name==='AbortError')return}
+  shareCopy()}
+async function shareCopy(){if(!PKG)return;
+  if(await copyText(PKG.text)){shareMark();toast('Mensaje copiado ✓ Pégalo en WhatsApp o donde prefieras')}
+  else{const b=$('pk_box');if(b)b.innerHTML=`<div class="mut" style="margin-top:8px">No pude copiar solo. Mantén pulsado en el cuadro, elige "Seleccionar todo" y copia:</div><textarea rows="4" readonly onfocus="this.select()">${esc(PKG.text)}</textarea>`}}
+async function shareFile(){if(!PKG)return;const name='kiosco-app-'+today()+'.kiosco.txt';
+  try{const f=new File([PKG.text],name,{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Kiosco App · Reporte'});shareMark();return toast('Archivo compartido ✓')}}catch(e){if(e&&e.name==='AbortError')return}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([PKG.text],{type:'text/plain'}));a.download=name;document.body.appendChild(a);a.click();a.remove();toast('Si no se descargó, usa "Copiar mensaje"')}catch(e){toast('No se pudo crear el archivo. Usa "Copiar mensaje"')}}
+function impForm(){dlg(`<h2>Recibir</h2><div class="mut">Pega el mensaje completo que te enviaron, o elige el archivo. Tu teléfono quedará igual que el de quien lo envió.</div>
+  <button class="sec" style="width:100%;margin-top:10px" onclick="impPaste()">📋 Pegar del portapapeles</button>
+  <label>O pega el mensaje aquí</label><textarea id="i_t" rows="4"></textarea>
+  <label>O elige el archivo</label><input type="file" accept=".txt,.kiosco,.json,text/plain,application/json" onchange="impFile(this)">
+  <div id="i_err" class="low" style="margin-top:8px"></div>
+  <div class="row" style="margin-top:12px"><button class="sec" onclick="closeDlg()">Cancelar</button><button onclick="impCheck()">Revisar</button></div>`)}
+async function impPaste(){try{const t=await navigator.clipboard.readText();if(!t)return toast('El portapapeles está vacío');$('i_t').value=t;impCheck()}catch(e){toast('No pude leer el portapapeles. Mantén pulsado en el cuadro y pega')}}
+function impFile(el){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('i_t').value=r.result;impCheck()};r.onerror=()=>toast('No se pudo leer el archivo');r.readAsText(f)}
+async function impCheck(){let p;
+  try{p=await pkParse($('i_t').value)}catch(e){const m=e.message||'No se pudo leer el paquete';const x=$('i_err');if(x)x.textContent=m;return toast(m)}
+  PK=p;const s=p.sum,old=!(p.data.v>=VER);
+  dlg(`<h2>Datos recibidos</h2><div class="card"><div class="mut">${s.at?'Enviado: '+fdt(s.at):'Respaldo antiguo (sin fecha)'}</div>
+  <div class="row" style="margin-top:6px"><span>📦 Productos · 🧾 Ventas</span><b>${s.prods} · ${s.sales}</b></div>
+  ${s.day?`<div class="row"><span>💰 Vendido el ${esc(s.day)}</span><b>${money(s.todayRev)}</b></div>`:''}
+  <div class="row"><span>⚠ Con stock bajo</span><b>${s.low}</b></div><div class="row"><span>📝 Por cobrar</span><b>${money(s.owed||0)}</b></div></div>
+  ${old?`<div class="card" style="border-color:var(--acc)"><b>Paquete de una versión anterior.</b><div class="mut">Se convierte a la versión nueva.</div></div>`:''}
+  <div class="card"><b>⚠ Esto reemplaza todos los datos de este teléfono.</b><div class="mut">Guardo una copia de lo que tienes ahora. Si te equivocas, en Ajustes puedes pulsar "Deshacer".</div></div>
+  <div class="row"><button class="sec" onclick="closeDlg()">Cancelar</button><button onclick="impApply()">Reemplazar</button></div>`)}
+function impApply(){if(!PK)return;
+  try{localStorage.setItem(KEY+'.prev',JSON.stringify(S))}catch(e){if(!confirm('No pude guardar la copia de seguridad de tus datos actuales. ¿Reemplazar de todos modos?'))return}
+  S=migrate(PK.data);OPEN='';S.recv=PK.sum.at||new Date().toISOString();CART=[];save();PK=null;closeDlg();tab='inicio';render();window.scrollTo(0,0);toast('Datos cargados ✓')}
+function undoImp(){let r;try{r=localStorage.getItem(KEY+'.prev')}catch(e){}
+  if(!r)return toast('No hay copia anterior');
+  if(!confirm('¿Volver a los datos que tenías antes de la última recepción?'))return;
+  try{S=migrate(JSON.parse(r));localStorage.removeItem(KEY+'.prev');CART=[];save();render();toast('Datos anteriores restaurados ✓')}catch(e){toast('No se pudo restaurar')}}
+
+
+/* ============ ARRANQUE ============ */
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){render();promptRate()}});
+render();splash();setTimeout(promptRate,1400);
+</script>
+</body>
+</html>
